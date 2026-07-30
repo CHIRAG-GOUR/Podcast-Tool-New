@@ -1,0 +1,6 @@
+text,optionA,optionB,optionC,optionD,correctOption,explanation,grade,subjectId,topicId,difficulty
+Sample question text?,Option A,Option B,Option C,Option D,A,Sample explanation,10,mathematics-10,math-number-systems,1
+Sample question text?,Option A,Option B,Option C,Option D,A,Sample explanation,10,science-10,sci-chemical-reactions,1
+Sample question text?,Option A,Option B,Option C,Option D,A,Sample explanation,10,social-science-10,ss-nationalism-india,1
+Sample question text?,Option A,Option B,Option C,Option D,A,Sample explanation,10,english-10,eng-reading-comprehension,1
+Sample question text?,Option A,Option B,Option C,Option D,A,Sample explanation,10,hindi-10,hin-vyakaran,1
