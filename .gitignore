@@ -45,7 +45,6 @@ s a m p l e _ p o d c a s t . m p 4
 .next/
 node_modules/
 
-# Exclude APIs and sensitive user files as requested
-**/src/app/api/
+# Exclude sensitive user files and API keys as requested
 *.txt
 *firebase-adminsdk*.json
