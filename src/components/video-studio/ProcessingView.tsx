@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 interface ProcessingViewProps {
   file: File | null
   context?: string
-  onComplete: (data: any) => void
+  onComplete: (data: Record<string, unknown>) => void
   onCancel?: () => void
 }
 
@@ -83,7 +83,9 @@ export function ProcessingView({ file, context, onComplete, onCancel }: Processi
           try {
             const errData = await res.json();
             if (errData.error) errMessage = errData.error;
-          } catch(e) {}
+          } catch {
+            // ignore JSON parse error
+          }
           throw new Error(errMessage);
         }
 
@@ -95,9 +97,10 @@ export function ProcessingView({ file, context, onComplete, onCancel }: Processi
           onComplete(data);
         }, 1000);
 
-      } catch (err: any) {
-        console.error("Video processing error:", err);
-        setError(err.message || "Failed to analyze video. Please try again.");
+      } catch (err: unknown) {
+        const errorObj = err as Error;
+        console.error("Video processing error:", errorObj);
+        setError(errorObj.message || "Failed to analyze video. Please try again.");
         clearInterval(interval);
       }
     };
@@ -105,7 +108,7 @@ export function ProcessingView({ file, context, onComplete, onCancel }: Processi
     processVideo();
 
     return () => clearInterval(interval);
-  }, [file, onComplete]);
+  }, [file, context, onComplete]);
 
   return (
     <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-3xl p-6 md:p-10 shadow-xl relative overflow-hidden">
@@ -139,7 +142,7 @@ export function ProcessingView({ file, context, onComplete, onCancel }: Processi
               {index !== STEPS.length - 1 && (
                 <div 
                   className={cn(
-                    "absolute left-[11px] top-[30px] bottom-[-24px] w-[2px]",
+                    "absolute left-2.75 top-7.5 -bottom-6 w-0.5",
                     isCompleted ? "bg-primary" : "bg-border"
                   )} 
                 />
@@ -172,7 +175,7 @@ export function ProcessingView({ file, context, onComplete, onCancel }: Processi
         <div className="mt-8 flex justify-center">
            <button 
              onClick={onCancel}
-             className="px-6 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-medium transition-colors"
+             className="px-6 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-medium transition-colors cursor-pointer"
            >
              Go Back & Try Again
            </button>
