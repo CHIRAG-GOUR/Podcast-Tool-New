@@ -44,6 +44,11 @@ next-env.d.ts
 *.docx
 *.bak
 
-# Exclude sensitive user files and API keys as requested
+# Exclude sensitive user files, test scripts, and API keys as requested
 *.txt
 *firebase-adminsdk*.json
+test*.mjs
+test-*.mjs
+*.m4a
+example_podcast.mp4
+
