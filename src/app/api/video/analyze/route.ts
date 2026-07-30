@@ -304,7 +304,11 @@ Do NOT include markdown formatting or backticks. Just pure JSON.`;
     return NextResponse.json({ clips: parsedClips, captions: [], cuts: parsedCuts, fileKey: fileKey || "" });
   } catch (error: any) {
     console.error('Video Analysis API Error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    let msg = error?.message || 'Internal Server Error';
+    if (msg.includes('API_KEY_INVALID') || msg.includes('API key not valid')) {
+      msg = 'Invalid Gemini API Key on Vercel. Please update GEMINI_API_KEY in your Vercel Project Environment Variables.';
+    }
+    return NextResponse.json({ error: msg }, { status: 500 });
   } finally {
     if (tempFilePath) await unlink(tempFilePath).catch(() => { });
     if (compressedPath) await unlink(compressedPath).catch(() => { });
