@@ -37,11 +37,12 @@ export function ProcessingView({ file, context, onComplete, onCancel }: Processi
         if (!file) throw new Error("No file selected");
         
         // 1. Get signed URL
+        const secretToken = process.env.NEXT_PUBLIC_API_SECRET_TOKEN || 'podcast_secure_v1_987654321';
         const urlRes = await fetch("/api/video/upload-url", {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_API_SECRET_TOKEN}`
+            "Authorization": `Bearer ${secretToken}`
           },
           body: JSON.stringify({ filename: file.name, contentType: file.type })
         });
@@ -71,7 +72,7 @@ export function ProcessingView({ file, context, onComplete, onCancel }: Processi
 
         const res = await fetch(`/api/video/analyze`, {
           headers: {
-            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_API_SECRET_TOKEN}`
+            "Authorization": `Bearer ${secretToken}`
           },
           method: "POST",
           body: formData,
