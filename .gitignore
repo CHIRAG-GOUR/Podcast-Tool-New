@@ -39,11 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-s a m p l e _ p o d c a s t . m p 4  
- 
-.firebase/
-.next/
-node_modules/
+
+# docx and backup files
+*.docx
+*.bak
 
 # Exclude sensitive user files and API keys as requested
 *.txt
