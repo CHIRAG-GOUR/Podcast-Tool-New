@@ -11,17 +11,22 @@ const storageBucket = process.env.ADMIN_FIREBASE_STORAGE_BUCKET
   || process.env.FIREBASE_STORAGE_BUCKET
   || (projectId ? `${projectId}.firebasestorage.app` : 'skillizee-products.firebasestorage.app');
 
+function parsePrivateKey(key: string | undefined): string | undefined {
+  if (!key) return undefined;
+  let normalized = key.trim();
+  if ((normalized.startsWith('"') && normalized.endsWith('"')) || 
+      (normalized.startsWith("'") && normalized.endsWith("'"))) {
+    normalized = normalized.slice(1, -1).trim();
+  }
+  normalized = normalized.replace(/\\n/g, '\n');
+  return normalized;
+}
+
 function initAdmin() {
   if (getApps().length === 0) {
     try {
-      if (projectId && clientEmail && rawPrivateKey) {
-        let privateKey = rawPrivateKey;
-        if ((privateKey.startsWith('"') && privateKey.endsWith('"')) || 
-            (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
-          privateKey = privateKey.slice(1, -1);
-        }
-        privateKey = privateKey.replace(/\\n/g, '\n');
-
+      const privateKey = parsePrivateKey(rawPrivateKey);
+      if (projectId && clientEmail && privateKey) {
         initializeApp({
           credential: cert({
             projectId,
@@ -67,7 +72,7 @@ export function getAdminStorage(): Storage | null {
 export const db = new Proxy({}, {
   get(_, prop) {
     const instance = getAdminDb();
-    if (!instance) throw new Error("Firebase Admin DB not initialized");
+    if (!instance) return undefined;
     const val = (instance as any)[prop];
     return typeof val === 'function' ? val.bind(instance) : val;
   }
@@ -76,7 +81,7 @@ export const db = new Proxy({}, {
 export const storage = new Proxy({}, {
   get(_, prop) {
     const instance = getAdminStorage();
-    if (!instance) throw new Error("Firebase Admin Storage not initialized");
+    if (!instance) return undefined;
     const val = (instance as any)[prop];
     return typeof val === 'function' ? val.bind(instance) : val;
   }
