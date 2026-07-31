@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { UploadView } from "@/components/video-studio/UploadView"
 import { ProcessingView } from "@/components/video-studio/ProcessingView"
 import { StudioView } from "@/components/video-studio/StudioView"
+import { SavedProject, saveProject } from "@/lib/projects"
 
 export type ViewState = 'upload' | 'processing' | 'studio'
 
@@ -15,7 +16,9 @@ export default function VideoStudio() {
   const [videoContext, setVideoContext] = useState("")
   const [clips, setClips] = useState<any[]>([])
   const [captions, setCaptions] = useState<any[]>([])
+  const [cuts, setCuts] = useState<any[]>([])
   const [fileKey, setFileKey] = useState<string | null>(null)
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
 
   const handleUploadComplete = (uploadedFile: File, context: string) => {
     setFile(uploadedFile)
@@ -24,13 +27,45 @@ export default function VideoStudio() {
     setView('processing')
   }
 
-  const [cuts, setCuts] = useState<any[]>([])
-
   const handleProcessingComplete = (data: any) => {
-    setClips(data.clips || [])
-    setCaptions(data.captions || [])
-    setCuts(data.cuts || [])
-    setFileKey(data.fileKey || null)
+    const parsedClips = data.clips || []
+    const parsedCaptions = data.captions || []
+    const parsedCuts = data.cuts || []
+    const key = data.fileKey || null
+
+    setClips(parsedClips)
+    setCaptions(parsedCaptions)
+    setCuts(parsedCuts)
+    setFileKey(key)
+
+    // Save project for instant re-editing in My Projects
+    const projId = 'proj_' + Date.now()
+    const projName = file ? file.name.replace(/\.[^/.]+$/, "") : "Podcast AI Project"
+    const newProject: SavedProject = {
+      id: projId,
+      name: projName,
+      fileKey: key,
+      fileUrl: fileUrl,
+      fileName: file ? file.name : "video.mp4",
+      fileSize: file ? file.size : 0,
+      clips: parsedClips,
+      captions: parsedCaptions,
+      cuts: parsedCuts,
+      updatedAt: new Date().toISOString()
+    }
+    
+    saveProject(newProject)
+    setActiveProjectId(projId)
+    setView('studio')
+  }
+
+  const handleOpenSavedProject = (project: SavedProject) => {
+    setActiveProjectId(project.id)
+    setClips(project.clips || [])
+    setCaptions(project.captions || [])
+    setCuts(project.cuts || [])
+    setFileKey(project.fileKey || null)
+    setFileUrl(project.fileUrl || null)
     setView('studio')
   }
 
@@ -45,7 +80,10 @@ export default function VideoStudio() {
             exit={{ opacity: 0, y: -10 }}
             className="h-full w-full flex items-center justify-center p-4 md:p-8 overflow-y-auto"
           >
-            <UploadView onUploadComplete={handleUploadComplete} />
+            <UploadView 
+              onUploadComplete={handleUploadComplete} 
+              onOpenSavedProject={handleOpenSavedProject}
+            />
           </motion.div>
         )}
 
@@ -57,7 +95,12 @@ export default function VideoStudio() {
             exit={{ opacity: 0, scale: 1.05 }}
             className="h-full w-full flex items-center justify-center p-4 md:p-8"
           >
-            <ProcessingView file={file} context={videoContext} onComplete={handleProcessingComplete} onCancel={() => setView('upload')} />
+            <ProcessingView 
+              file={file} 
+              context={videoContext} 
+              onComplete={handleProcessingComplete} 
+              onCancel={() => setView('upload')} 
+            />
           </motion.div>
         )}
 
@@ -68,7 +111,15 @@ export default function VideoStudio() {
             animate={{ opacity: 1 }}
             className="h-full w-full"
           >
-            <StudioView file={file} fileKey={fileKey} fileUrl={fileUrl} clips={clips} initialCaptions={captions} initialCuts={cuts} />
+            <StudioView 
+              file={file} 
+              fileKey={fileKey} 
+              fileUrl={fileUrl} 
+              clips={clips} 
+              initialCaptions={captions} 
+              initialCuts={cuts} 
+              onBack={() => setView('upload')}
+            />
           </motion.div>
         )}
       </AnimatePresence>
