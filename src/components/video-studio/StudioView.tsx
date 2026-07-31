@@ -66,10 +66,6 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
    const [fileUrl, setFileUrl] = useState<string | null>(initialFileUrl)
 
    useEffect(() => {
-      setFileUrl(initialFileUrl)
-   }, [initialFileUrl])
-
-   useEffect(() => {
       if (fileKey && (!fileUrl || fileUrl.startsWith('blob:'))) {
          fetch("/api/video/stream-url", {
             method: "POST",

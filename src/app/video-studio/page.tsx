@@ -14,11 +14,10 @@ export default function VideoStudio() {
   const [file, setFile] = useState<File | null>(null)
   const [fileUrl, setFileUrl] = useState<string | null>(null)
   const [videoContext, setVideoContext] = useState("")
-  const [clips, setClips] = useState<any[]>([])
-  const [captions, setCaptions] = useState<any[]>([])
-  const [cuts, setCuts] = useState<any[]>([])
+  const [clips, setClips] = useState<Record<string, unknown>[]>([])
+  const [captions, setCaptions] = useState<Record<string, unknown>[]>([])
+  const [cuts, setCuts] = useState<Record<string, unknown>[]>([])
   const [fileKey, setFileKey] = useState<string | null>(null)
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
 
   const handleUploadComplete = (uploadedFile: File, context: string) => {
     setFile(uploadedFile)
@@ -27,11 +26,11 @@ export default function VideoStudio() {
     setView('processing')
   }
 
-  const handleProcessingComplete = (data: any) => {
-    const parsedClips = data.clips || []
-    const parsedCaptions = data.captions || []
-    const parsedCuts = data.cuts || []
-    const key = data.fileKey || null
+  const handleProcessingComplete = (data: Record<string, unknown>) => {
+    const parsedClips = (data.clips as Record<string, unknown>[]) || []
+    const parsedCaptions = (data.captions as Record<string, unknown>[]) || []
+    const parsedCuts = (data.cuts as Record<string, unknown>[]) || []
+    const key = (data.fileKey as string) || null
 
     setClips(parsedClips)
     setCaptions(parsedCaptions)
@@ -55,12 +54,10 @@ export default function VideoStudio() {
     }
     
     saveProject(newProject)
-    setActiveProjectId(projId)
     setView('studio')
   }
 
   const handleOpenSavedProject = async (project: SavedProject) => {
-    setActiveProjectId(project.id)
     setClips(project.clips || [])
     setCaptions(project.captions || [])
     setCuts(project.cuts || [])
@@ -82,7 +79,7 @@ export default function VideoStudio() {
             saveProject({ ...project, fileUrl: data.url });
           }
         }
-      } catch (e) {
+      } catch (e: unknown) {
         console.error("Error resolving stream URL:", e);
       }
     }
