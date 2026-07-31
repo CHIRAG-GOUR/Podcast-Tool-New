@@ -20,7 +20,7 @@ export interface User {
 const DEFAULT_USERS: User[] = [
   {
     email: "pa1@skillizee.io",
-    password: "Admin@kittu",
+    password: "Admin@123",
     roles: ["linkedin", "social_media", "podcast", "admin"],
     isAdmin: true,
     name: "Primary Admin"
