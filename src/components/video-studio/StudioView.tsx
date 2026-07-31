@@ -99,6 +99,21 @@ export function StudioView({ file, fileKey, fileUrl, clips: initialClips, initia
    const [projectClips, setProjectClips] = useState<any[]>(() => {
       const defaultClips: any[] = [{ id: 'c1', trackId: 'v1', type: 'video', start: 0, end: 15, duration: 15, title: 'Podcast Source' }];
 
+      if (initialCaptions && initialCaptions.length > 0) {
+         defaultClips.push({
+            id: 'cap_initial',
+            trackId: 'v2', type: 'text',
+            start: 0,
+            end: 15,
+            duration: 15,
+            title: 'Auto Captions',
+            text: '',
+            chunks: initialCaptions,
+            transform: { x: 0, y: 150, width: 600, height: 60, scale: 100, rotation: 0 },
+            style: { fontFamily: 'Inter', fontSize: 48, preset: 'hormozi' }
+         });
+      }
+
       if (initialCuts && initialCuts.length > 0) {
          initialCuts.forEach((cut: any, index: number) => {
             if (cut.start < 15) {
