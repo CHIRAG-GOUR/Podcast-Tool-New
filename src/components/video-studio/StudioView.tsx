@@ -532,7 +532,7 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
                                  <span className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-500" /> Score: {clip.score}</span>
                                  <span>{clip.category}</span>
                               </div>
-                              <div className="mt-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="mt-3 flex gap-2">
                                  <button onClick={() => {
                                     const duration = (clip.end_time || 15) - (clip.start_time || 0);
                                     setVideoDuration(duration);
@@ -551,34 +551,48 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
                                        mediaEnd: mediaEnd
                                     }];
 
-                                    if (clip.captions && clip.captions.length > 0) {
-                                       const shiftedChunks = clip.captions;
-
-                                       let preset = 'hormozi';
-                                       if (clip.caption_style) {
-                                          const styleStr = clip.caption_style.toLowerCase();
-                                          if (styleStr.includes('minimal')) preset = 'minimalist';
-                                          else if (styleStr.includes('bold')) preset = 'beast';
-                                          else if (styleStr.includes('youtube')) preset = 'youtube';
-                                          else if (styleStr.includes('tiktok')) preset = 'tiktok';
-                                       }
-
-                                       newClips.push({
-                                          id: 'cap_' + Date.now(),
-                                          trackId: 'v2', type: 'text',
-                                          start: 0,
-                                          end: duration,
-                                          duration: duration,
-                                          title: 'Auto Captions',
-                                          text: '',
-                                          chunks: shiftedChunks,
-                                          transform: { x: 0, y: 150, width: 600, height: 60, scale: 100, rotation: 0 },
-                                          style: { fontFamily: 'Inter', fontSize: 48, preset: preset }
-                                       });
-                                       setCaptionsGenerated(true);
-                                    } else {
-                                       setCaptionsGenerated(false);
+                                    // Always auto-generate captions for this clip slice
+                                    let shiftedChunks = clip.captions || [];
+                                    if ((!shiftedChunks || shiftedChunks.length === 0) && initialCaptions && initialCaptions.length > 0) {
+                                       shiftedChunks = initialCaptions
+                                          .filter((phrase: any) => phrase.start >= mediaStart - 0.5 && phrase.end <= mediaEnd + 0.5)
+                                          .map((phrase: any) => {
+                                             let p = JSON.parse(JSON.stringify(phrase));
+                                             p.start = Math.max(0, p.start - mediaStart);
+                                             p.end = Math.max(0, p.end - mediaStart);
+                                             if (p.words) {
+                                                p.words = p.words.map((w: any) => ({
+                                                   ...w,
+                                                   start: Math.max(0, w.start - mediaStart),
+                                                   end: Math.max(0, w.end - mediaStart)
+                                                }));
+                                             }
+                                             return p;
+                                          });
                                     }
+
+                                    let preset = 'hormozi';
+                                    if (clip.caption_style) {
+                                       const styleStr = clip.caption_style.toLowerCase();
+                                       if (styleStr.includes('minimal')) preset = 'minimalist';
+                                       else if (styleStr.includes('bold')) preset = 'beast';
+                                       else if (styleStr.includes('youtube')) preset = 'youtube';
+                                       else if (styleStr.includes('tiktok')) preset = 'tiktok';
+                                    }
+
+                                    newClips.push({
+                                       id: 'cap_' + Date.now(),
+                                       trackId: 'v2', type: 'text',
+                                       start: 0,
+                                       end: duration,
+                                       duration: duration,
+                                       title: 'Auto Captions',
+                                       text: '',
+                                       chunks: shiftedChunks,
+                                       transform: { x: 0, y: 150, width: 600, height: 60, scale: 100, rotation: 0 },
+                                       style: { fontFamily: 'Inter', fontSize: 48, preset: preset }
+                                    });
+                                    setCaptionsGenerated(true);
 
                                     if (initialCuts && initialCuts.length > 0) {
                                        const validCuts = initialCuts.filter((c: any) => c.end > mediaStart && c.start < mediaEnd);
@@ -600,7 +614,6 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
                                           }
                                        });
                                     } else {
-                                       // Auto-generate mock camera shifts if no real AI tracking data is available
                                        let currentCutTime = 0;
                                        let cutIdx = 1;
                                        while (currentCutTime < duration) {
@@ -623,18 +636,20 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
                                     }
                                     setProjectClips(newClips);
                                     setCurrentTime(0);
+                                    setIsPlaying(true);
                                     if (videoRef.current) {
-                                       videoRef.current.currentTime = clip.start_time || 0;
+                                       videoRef.current.currentTime = mediaStart;
+                                       videoRef.current.play().catch(() => {});
                                     }
                                  }}
-                                    className="flex-1 bg-[#6366F1] text-white text-[10px] py-1.5 rounded font-medium">
+                                    className="flex-1 bg-[#6366F1] hover:bg-[#4F46E5] text-white text-[10px] py-1.5 rounded font-medium transition-colors">
                                     Use Clip
                                  </button>
                                  <button
                                     onClick={() => {
                                        if (videoRef.current) {
                                           videoRef.current.currentTime = clip.start_time || 0;
-                                          videoRef.current.play();
+                                          videoRef.current.play().catch(() => {});
                                           setIsPlaying(true);
                                        }
                                     }}
@@ -649,60 +664,46 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
 
                   {/* Text Tab */}
                   {leftTab === 'text' && (
-                     <div className="space-y-4 flex flex-col items-center justify-center h-full text-center">
-                        {!captionsGenerated ? (
-                           <>
-                              <div className={cn("w-12 h-12 rounded-full flex items-center justify-center mb-2", bgPanel)}>
-                                 <MessageSquare className={cn("w-5 h-5", textMuted)} />
-                              </div>
-                              <h3 className={cn("text-sm font-semibold mb-1", textHighlight)}>Auto-Captions</h3>
-                              <p className={cn("text-xs mb-4 max-w-[200px]", textMuted)}>Click below to add the AI-generated captions to your timeline.</p>
+                     <div className="space-y-4 text-left">
+                        <div className="flex items-center justify-between">
+                           <h3 className={cn("text-xs font-bold uppercase tracking-wider", textHighlight)}>Auto-Captions Style</h3>
+                           <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded flex items-center gap-1 font-semibold">
+                              <Check className="w-3 h-3" /> Auto Active
+                           </span>
+                        </div>
+                        <p className={cn("text-[11px]", textMuted)}>
+                           Captions are automatically synchronized on track V2. Click any preset below to instantly transform your subtitle aesthetic.
+                        </p>
+
+                        {/* Preset Selector Grid */}
+                        <div className="grid grid-cols-2 gap-2 mt-3">
+                           {[
+                              { id: 'hormozi', name: 'Hormozi Style', bg: 'bg-yellow-400 text-black font-extrabold', desc: 'Yellow highlight + impact' },
+                              { id: 'minimalist', name: 'Minimalist', bg: 'bg-white text-black font-medium', desc: 'Clean modern subtitle' },
+                              { id: 'beast', name: 'MrBeast Bold', bg: 'bg-gradient-to-r from-yellow-400 via-pink-500 to-cyan-400 text-black font-black', desc: 'Vibrant highlight' },
+                              { id: 'youtube', name: 'YouTube Sub', bg: 'bg-black text-white border border-gray-700', desc: 'Classic black bar' },
+                              { id: 'tiktok', name: 'TikTok Pop', bg: 'bg-[#6366F1] text-white font-bold', desc: 'Pop-up gradient box' },
+                           ].map(p => (
                               <button
+                                 key={p.id}
                                  onClick={() => {
-                                    if (!activeClip || activeClip.type !== 'video') {
-                                       alert("Please select a video clip first.");
-                                       return;
-                                    }
-
-                                    const sourceClip = aiClips.find((c: any) => c.start_time === activeClip.mediaStart);
-                                    if (!sourceClip || !sourceClip.captions || sourceClip.captions.length === 0) {
-                                       alert("No captions were generated for this clip.");
-                                       return;
-                                    }
-
-                                    const newCaptionClip = {
-                                       id: 'cap_' + Date.now(),
-                                       trackId: 'v2', type: 'text',
-                                       start: activeClip.start,
-                                       end: activeClip.start + activeClip.duration,
-                                       duration: activeClip.duration,
-                                       title: 'Auto Captions',
-                                       text: '',
-                                       chunks: sourceClip.captions,
-                                       transform: { x: 0, y: 150, width: 600, height: 60, scale: 100, rotation: 0 },
-                                       style: { fontFamily: 'Inter', fontSize: 48, preset: 'dark' }
-                                    };
-
-                                    setProjectClips(p => [...p, newCaptionClip]);
-                                    setActiveClipId(newCaptionClip.id);
-                                    setCaptionsGenerated(true);
+                                    setProjectClips(prev => prev.map(c => {
+                                       if (c.trackId === 'v2' || c.type === 'text') {
+                                          return { ...c, style: { ...(c.style || {}), preset: p.id } };
+                                       }
+                                       return c;
+                                    }));
                                  }}
-                                 className="bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-semibold px-4 py-2 rounded flex items-center gap-2"
+                                 className={cn("p-2.5 rounded-lg border text-left transition-all hover:scale-[1.02]", borderCol, bgPanel, "hover:border-[#6366F1]")}
                               >
-                                 <Sparkles className="w-3 h-3" />
-                                 Add Captions to Timeline
+                                 <div className={cn("text-[10px] px-2 py-1 rounded mb-1.5 text-center truncate", p.bg)}>
+                                    Aa Captions
+                                 </div>
+                                 <p className={cn("font-semibold text-xs", textHighlight)}>{p.name}</p>
+                                 <p className={cn("text-[9px]", textMuted)}>{p.desc}</p>
                               </button>
-                           </>
-                        ) : (
-                           <div className="w-full text-left">
-                              <h3 className="text-xs font-semibold text-[#10B981] mb-2 flex items-center gap-1"><Check className="w-3 h-3" /> Captions Ready</h3>
-                              <p className={cn("text-[10px] mb-4", textMuted)}>Captions have been added to track V2. Select them in the timeline to edit styles.</p>
-                              <button onClick={() => {
-                                 setProjectClips(p => p.filter(c => c.type !== 'text'));
-                                 setCaptionsGenerated(false);
-                              }} className="text-[10px] text-red-400 hover:text-red-500">Remove Captions</button>
-                           </div>
-                        )}
+                           ))}
+                        </div>
                      </div>
                   )}
 
