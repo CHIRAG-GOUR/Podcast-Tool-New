@@ -62,7 +62,30 @@ const CopyButton = ({ text }: { text: string }) => {
 };
 
 
-export function StudioView({ file, fileKey, fileUrl, clips: initialClips, initialCaptions, initialCuts, onBack }: any) {
+export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: initialClips, initialCaptions, initialCuts, onBack }: any) {
+   const [fileUrl, setFileUrl] = useState<string | null>(initialFileUrl)
+
+   useEffect(() => {
+      setFileUrl(initialFileUrl)
+   }, [initialFileUrl])
+
+   useEffect(() => {
+      if (fileKey && (!fileUrl || fileUrl.startsWith('blob:'))) {
+         fetch("/api/video/stream-url", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fileKey })
+         })
+            .then(res => res.json())
+            .then(data => {
+               if (data.url) {
+                  setFileUrl(data.url)
+               }
+            })
+            .catch(err => console.error("Error resolving video stream URL:", err))
+      }
+   }, [fileKey, fileUrl])
+
    const [isPlaying, setIsPlaying] = useState(false)
    const [currentTime, setCurrentTime] = useState(0)
    const [videoDuration, setVideoDuration] = useState(0)

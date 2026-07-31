@@ -59,13 +59,35 @@ export default function VideoStudio() {
     setView('studio')
   }
 
-  const handleOpenSavedProject = (project: SavedProject) => {
+  const handleOpenSavedProject = async (project: SavedProject) => {
     setActiveProjectId(project.id)
     setClips(project.clips || [])
     setCaptions(project.captions || [])
     setCuts(project.cuts || [])
     setFileKey(project.fileKey || null)
-    setFileUrl(project.fileUrl || null)
+
+    let currentUrl = project.fileUrl || null;
+    
+    if (project.fileKey && (!currentUrl || currentUrl.startsWith('blob:'))) {
+      try {
+        const res = await fetch("/api/video/stream-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileKey: project.fileKey })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) {
+            currentUrl = data.url;
+            saveProject({ ...project, fileUrl: data.url });
+          }
+        }
+      } catch (e) {
+        console.error("Error resolving stream URL:", e);
+      }
+    }
+
+    setFileUrl(currentUrl)
     setView('studio')
   }
 
