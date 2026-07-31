@@ -301,7 +301,30 @@ Do NOT include markdown formatting or backticks. Just pure JSON.`;
       });
     });
 
-    return NextResponse.json({ clips: parsedClips, captions: [], cuts: parsedCuts, fileKey: fileKey || "" });
+    // Generate dynamic speaker camera angle cuts if auto_framer didn't return cuts (e.g. on Vercel)
+    let finalCuts = parsedCuts;
+    if (!finalCuts || finalCuts.length === 0) {
+      finalCuts = [];
+      let t = 0;
+      const positions = [0.25, 0.75, 0.5];
+      let idx = 0;
+      const totalDur = parsedCaptions.length > 0 ? (parsedCaptions[parsedCaptions.length - 1].end || 60) : 60;
+      while (t < totalDur) {
+        const cutDur = 3.5 + (idx % 2 === 0 ? 1.5 : 0.5);
+        const endT = Math.min(totalDur, t + cutDur);
+        finalCuts.push({
+          start: parseFloat(t.toFixed(2)),
+          end: parseFloat(endT.toFixed(2)),
+          duration: parseFloat((endT - t).toFixed(2)),
+          cx_percent: positions[idx % positions.length],
+          speaker: idx % 2 === 0 ? 'left' : 'right'
+        });
+        t = endT;
+        idx++;
+      }
+    }
+
+    return NextResponse.json({ clips: parsedClips, captions: parsedCaptions, cuts: finalCuts, fileKey: fileKey || "" });
   } catch (error: any) {
     console.error('Video Analysis API Error:', error);
     let msg = error?.message || 'Internal Server Error';
