@@ -157,7 +157,7 @@ export function UploadView({ onUploadComplete, onOpenSavedProject }: UploadViewP
           <div className="flex flex-col md:flex-row gap-8 items-center">
             <div className="w-full md:w-1/3 aspect-video bg-black/10 rounded-2xl border flex items-center justify-center relative overflow-hidden">
               <FileVideo className="w-16 h-16 text-muted-foreground/30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent flex items-end p-4">
                 <span className="text-white font-medium text-sm drop-shadow-md truncate">{selectedFile.name}</span>
               </div>
             </div>
@@ -191,7 +191,7 @@ export function UploadView({ onUploadComplete, onOpenSavedProject }: UploadViewP
                   value={videoContext}
                   onChange={(e) => setVideoContext(e.target.value)}
                   placeholder="e.g., This is a podcast about AI startups. Find the most funny and viral moments."
-                  className="w-full bg-background border rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary outline-none min-h-[80px]"
+                  className="w-full bg-background border rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary outline-none min-h-20"
                 />
               </div>
 
@@ -246,7 +246,7 @@ export function UploadView({ onUploadComplete, onOpenSavedProject }: UploadViewP
                 <div>
                   <div className="aspect-video bg-slate-900 rounded-xl mb-4 relative overflow-hidden flex items-center justify-center border border-border/60 group-hover:border-primary/30 transition-colors">
                     <FileVideo className="w-12 h-12 text-slate-600" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-3">
+                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-3">
                       <div className="flex justify-between items-start">
                         <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-600 text-white uppercase shadow">
                           {project.clips.length} AI Clips
