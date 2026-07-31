@@ -4,13 +4,13 @@ import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { EditableCanvasNode, Transform } from "./EditableCanvasNode"
 import {
-   Play, Pause, Scissors, Type, Volume2, Image as ImageIcon,
-   Settings, Download, ChevronRight, Zap, TrendingUp, BookOpen,
-   Smile, Flame, Activity, Layout, Wand2, ArrowLeft, Check, Layers, Sparkles, Trash2, SplitSquareHorizontal, ZoomIn, ZoomOut, Move,
-   Smartphone, Monitor, Square, Plus, Music, Combine, Edit2, Copy, PlusCircle, UploadCloud, Video, Film,
-   Grid, Crop, RotateCcw, FastForward, Clock, Maximize, MousePointer2, Lock, Eye, EyeOff, Hash, FileVideo, AudioWaveform, SlidersHorizontal, Sun, Contrast, Gauge, Unlock,
-   Search, FolderOpen, Star, Undo, Redo, LayoutGrid, List, MessageSquare, MoreVertical, MousePointer,
-   Moon, Expand, Minimize, Command, X, ChevronUp, ChevronDown
+   Play, Pause, Scissors, Type, Image as ImageIcon,
+   Download, Zap,
+   Flame, Wand2, ArrowLeft, Check, Layers, Sparkles, Trash2, SplitSquareHorizontal, ZoomIn, ZoomOut, Move,
+   Plus, Copy, UploadCloud, Video, Film,
+   Grid, Crop, RotateCcw, FastForward, Clock, Maximize, MousePointer2, Lock, Eye, EyeOff, FileVideo, AudioWaveform, SlidersHorizontal, Sun, Contrast, Gauge, Unlock,
+   FolderOpen, Undo, Redo,
+   Moon, Expand, Minimize, X, ChevronUp, ChevronDown
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import WaveSurfer from 'wavesurfer.js'
@@ -114,7 +114,7 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
    ])
 
    // AI Clips & Project Clips
-   const [aiClips, setAiClips] = useState(initialClips.length > 0 ? initialClips : [])
+   const [aiClips] = useState(initialClips.length > 0 ? initialClips : [])
    const [projectClips, setProjectClips] = useState<any[]>(() => {
       const defaultClips: any[] = [{ id: 'c1', trackId: 'v1', type: 'video', start: 0, end: 15, duration: 15, title: 'Podcast Source' }];
 
@@ -169,9 +169,6 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
    // UI States
    const [showSafeMargins, setShowSafeMargins] = useState(false)
    const [playbackSpeed, setPlaybackSpeed] = useState(1)
-
-   const [isGeneratingCaptions, setIsGeneratingCaptions] = useState(false)
-   const [captionsGenerated, setCaptionsGenerated] = useState(!!(initialCaptions && initialCaptions.length > 0))
 
    const [uploadedMedia, setUploadedMedia] = useState<{ id: string, name: string, url: string, type: 'audio' | 'image' | 'video' }[]>([])
    const fileInputRef = useRef<HTMLInputElement>(null)
@@ -557,7 +554,7 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
                                        shiftedChunks = initialCaptions
                                           .filter((phrase: any) => phrase.start >= mediaStart - 0.5 && phrase.end <= mediaEnd + 0.5)
                                           .map((phrase: any) => {
-                                             let p = JSON.parse(JSON.stringify(phrase));
+                                             const p = JSON.parse(JSON.stringify(phrase));
                                              p.start = Math.max(0, p.start - mediaStart);
                                              p.end = Math.max(0, p.end - mediaStart);
                                              if (p.words) {
@@ -592,7 +589,6 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
                                        transform: { x: 0, y: 150, width: 600, height: 60, scale: 100, rotation: 0 },
                                        style: { fontFamily: 'Inter', fontSize: 48, preset: preset }
                                     });
-                                    setCaptionsGenerated(true);
 
                                     if (initialCuts && initialCuts.length > 0) {
                                        const validCuts = initialCuts.filter((c: any) => c.end > mediaStart && c.start < mediaEnd);
@@ -1070,7 +1066,7 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
                                  const baseFontSize = clip.style?.fontSize || 48;
 
                                  // Base text styles mapped from preset
-                                 let baseStyle: React.CSSProperties = {
+                                 const baseStyle: React.CSSProperties = {
                                     fontFamily: clip.style?.fontFamily || 'Inter',
                                     textAlign: 'center',
                                     whiteSpace: 'pre-wrap',
@@ -2033,7 +2029,7 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
                                     formData.append("viral_bouncy_text", bouncyText ? "true" : "false");
 
                                     if (textClip) {
-                                       let exportTextClip = JSON.parse(JSON.stringify(textClip));
+                                       const exportTextClip = JSON.parse(JSON.stringify(textClip));
                                        
                                        // Shift chunk times relative to the FFMPEG export window
                                        // FFMPEG starts at 0, corresponding to 'start_time' on the timeline.
@@ -2057,7 +2053,7 @@ export function StudioView({ file, fileKey, fileUrl: initialFileUrl, clips: init
                                        }
                                     }
 
-                                    let exportCameraCuts = projectClips.filter(c => c.type === 'cut');
+                                    const exportCameraCuts = projectClips.filter(c => c.type === 'cut');
                                     if (exportCameraCuts.length > 0) {
                                        formData.append("cameraCuts", JSON.stringify(exportCameraCuts));
                                     }
